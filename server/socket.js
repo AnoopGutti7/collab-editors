@@ -3,6 +3,7 @@ const rooms = {};
 export const setupSocket = (io) => {
   io.on("connection", (socket) => {
 
+    // ✅ JOIN ROOM
     socket.on("join-room", ({ roomId, username }) => {
       socket.join(roomId);
 
@@ -13,7 +14,6 @@ export const setupSocket = (io) => {
         rooms[roomId] = [];
       }
 
-      // avoid duplicates
       if (!rooms[roomId].includes(username)) {
         rooms[roomId].push(username);
       }
@@ -21,6 +21,21 @@ export const setupSocket = (io) => {
       io.to(roomId).emit("users", rooms[roomId]);
     });
 
+    // 🔥 ADD THIS → CHAT FEATURE
+    socket.on("send-message", ({ roomId, message, username }) => {
+      io.to(roomId).emit("receive-message", {
+        message,
+        username,
+        time: new Date().toLocaleTimeString(),
+      });
+    });
+
+    // 🔥 ADD THIS → CODE SYNC
+    socket.on("code-change", ({ roomId, file, code }) => {
+      socket.to(roomId).emit("receive-code", { file, code });
+    });
+
+    // ❌ DISCONNECT
     socket.on("disconnect", () => {
       const { roomId, username } = socket.data;
 

@@ -1,32 +1,29 @@
 import { useState } from "react";
+import { FileCode2, FolderOpen, Pencil, Plus, Save, Trash2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import "./FileExplorer.css";
 
-export default function FileExplorer({
-  files,
-  setFiles,
-  active,
-  setActive,
-}) {
+export default function FileExplorer({ files, setFiles, active, setActive }) {
   const [newFile, setNewFile] = useState("");
 
-  // ➕ CREATE FILE
   const createFile = () => {
-    if (!newFile.trim()) return;
+    const fileName = newFile.trim();
+    if (!fileName) return;
 
-    if (files[newFile]) {
+    if (files[fileName]) {
       alert("File already exists");
       return;
     }
 
     setFiles({
       ...files,
-      [newFile]: "// New file",
+      [fileName]: "// New file",
     });
 
-    setActive(newFile);
+    setActive(fileName);
     setNewFile("");
   };
 
-  // ❌ DELETE FILE
   const deleteFile = (name) => {
     if (!window.confirm("Delete file?")) return;
 
@@ -37,7 +34,6 @@ export default function FileExplorer({
     setActive(Object.keys(updated)[0] || "");
   };
 
-  // ✏️ RENAME FILE
   const renameFile = (oldName) => {
     const newName = prompt("Enter new file name:", oldName);
     if (!newName || newName === oldName) return;
@@ -50,7 +46,6 @@ export default function FileExplorer({
     setActive(newName);
   };
 
-  // 💾 SAVE FILE (DOWNLOAD)
   const saveFile = () => {
     if (!active) return;
 
@@ -64,7 +59,6 @@ export default function FileExplorer({
     link.click();
   };
 
-  // 📂 UPLOAD FILE
   const uploadFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -83,161 +77,98 @@ export default function FileExplorer({
   };
 
   return (
-    <div style={styles.container}>
-      <h3 style={styles.title}>📁 Files</h3>
+    <aside className="file-panel">
+      <div className="file-panel-header">
+        <div>
+          <span>Project</span>
+          <h2>
+            <FolderOpen size={18} />
+            Files
+          </h2>
+        </div>
+        <span className="file-count">{Object.keys(files).length}</span>
+      </div>
 
-      {/* CREATE FILE */}
-      <div style={styles.createBox}>
+      <div className="file-create">
         <input
           value={newFile}
           onChange={(e) => setNewFile(e.target.value)}
-          placeholder="file name (e.g main.cpp)"
-          style={styles.input}
+          onKeyDown={(e) => e.key === "Enter" && createFile()}
+          placeholder="main.cpp"
         />
-        <button onClick={createFile} style={styles.addBtn}>
-          + Add
-        </button>
+        <Button className="icon-action add-file" size="icon" onClick={createFile} aria-label="Add file">
+          <Plus size={16} />
+        </Button>
       </div>
 
-      {/* FILE LIST */}
-      <div style={styles.fileList}>
+      <div className="file-list">
         {Object.keys(files).map((name) => (
-          <div
+          <button
             key={name}
-            style={{
-              ...styles.fileItem,
-              background:
-                active === name ? "#2d2d2d" : "transparent",
-            }}
+            className={`file-item ${active === name ? "active" : ""}`}
             onClick={() => setActive(name)}
+            type="button"
           >
-            <span>{name}</span>
+            <span className="file-name">
+              <FileCode2 size={16} />
+              {name}
+            </span>
 
-            <div style={styles.actions}>
-              <button
+            <span className="file-actions">
+              <span
+                role="button"
+                tabIndex={0}
+                className="mini-action"
                 onClick={(e) => {
                   e.stopPropagation();
                   renameFile(name);
                 }}
-                style={styles.smallBtn}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    renameFile(name);
+                  }
+                }}
+                aria-label={`Rename ${name}`}
               >
-                ✏️
-              </button>
+                <Pencil size={13} />
+              </span>
 
-              <button
+              <span
+                role="button"
+                tabIndex={0}
+                className="mini-action danger"
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteFile(name);
                 }}
-                style={styles.deleteBtn}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                    deleteFile(name);
+                  }
+                }}
+                aria-label={`Delete ${name}`}
               >
-                ❌
-              </button>
-            </div>
-          </div>
+                <Trash2 size={13} />
+              </span>
+            </span>
+          </button>
         ))}
       </div>
 
-      {/* UPLOAD */}
-      <label style={styles.uploadBtn}>
-        📂 Upload
-        <input
-          type="file"
-          hidden
-          onChange={uploadFile}
-        />
-      </label>
+      <div className="file-tools">
+        <label className="tool-button">
+          <Upload size={15} />
+          Upload
+          <input type="file" hidden onChange={uploadFile} />
+        </label>
 
-      {/* SAVE */}
-      <button onClick={saveFile} style={styles.saveBtn}>
-        💾 Save File
-      </button>
-    </div>
+        <button className="tool-button" onClick={saveFile} type="button">
+          <Save size={15} />
+          Save file
+        </button>
+      </div>
+    </aside>
   );
 }
-
-/* 🎨 STYLES */
-const styles = {
-  container: {
-    width: "220px",
-    background: "#1e1e1e",
-    color: "white",
-    padding: "10px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-
-  title: {
-    marginBottom: "5px",
-  },
-
-  createBox: {
-    display: "flex",
-    gap: "5px",
-  },
-
-  input: {
-    flex: 1,
-    padding: "6px",
-    background: "#333",
-    border: "none",
-    color: "white",
-  },
-
-  addBtn: {
-    background: "#0e639c",
-    border: "none",
-    color: "white",
-    padding: "6px",
-    cursor: "pointer",
-  },
-
-  fileList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px",
-  },
-
-  fileItem: {
-    padding: "6px",
-    cursor: "pointer",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  actions: {
-    display: "flex",
-    gap: "5px",
-  },
-
-  smallBtn: {
-    background: "#444",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
-  },
-
-  deleteBtn: {
-    background: "#c0392b",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
-  },
-
-  uploadBtn: {
-    background: "#444",
-    padding: "8px",
-    textAlign: "center",
-    cursor: "pointer",
-  },
-
-  saveBtn: {
-    background: "#0e639c",
-    padding: "8px",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
-  },
-};

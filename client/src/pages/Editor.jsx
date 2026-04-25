@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
+import Editor from "@monaco-editor/react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { Code2, Play, Terminal, UsersRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { socket } from "../socket";
 import FileExplorer from "../components/FileExplorer";
 import Members from "../components/Members";
 import ChatBox from "../components/ChatBox";
-import axios from "axios";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
-import Editor from "@monaco-editor/react";
-import "./EditorUI.css";
+import "./EditorUi.css";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function EditorPage() {
   const { roomId } = useParams();
@@ -16,17 +20,14 @@ export default function EditorPage() {
   const username = state?.username;
 
   const [files, setFiles] = useState({
-    devops: "// New file",
+    "main.cpp": "// New file",
   });
 
-  const [activeFile, setActiveFile] = useState("devops");
+  const [activeFile, setActiveFile] = useState("main.cpp");
   const [output, setOutput] = useState("");
   const [input, setInput] = useState("");
   const [language, setLanguage] = useState("cpp");
 
-  /* =========================
-     CONNECT SOCKET
-  ========================= */
   useEffect(() => {
     if (!username) navigate("/");
 
@@ -34,15 +35,11 @@ export default function EditorPage() {
     socket.emit("join-room", { roomId, username });
 
     return () => socket.disconnect();
-  }, []);
+  }, [navigate, roomId, username]);
 
-  /* =========================
-     RECEIVE CODE (SYNC)
-  ========================= */
   useEffect(() => {
     socket.on("receive-code", ({ file, code }) => {
       setFiles((prev) => {
-        // prevent unnecessary re-render loop
         if (prev[file] === code) return prev;
 
         return {
@@ -55,32 +52,25 @@ export default function EditorPage() {
     return () => socket.off("receive-code");
   }, []);
 
-  /* =========================
-     RUN CODE
-  ========================= */
   const runCode = async () => {
     try {
       setOutput("Running...");
 
-      const res = await axios.post("http://localhost:5000/run", {
+      const res = await axios.post(`${API_URL}/run`, {
         code: files[activeFile],
         language,
         input,
       });
 
       setOutput(res.data.output || res.data.error || "No output");
-    } catch {
+    } catch (error) {
+      console.error(error);
       setOutput("Error running code");
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="editor-container">
-
-      {/* LEFT PANEL */}
       <div className="files-container">
         <FileExplorer
           files={files}
@@ -90,87 +80,95 @@ export default function EditorPage() {
         />
       </div>
 
-      {/* CENTER */}
       <div className="center-container">
-
-        {/* TOP BAR */}
         <div className="topbar">
-          <button className="run-btn" onClick={runCode}>
-            ▶ Run
-          </button>
+          <div className="workspace-title">
+            <div className="workspace-icon">
+              <Code2 size={18} />
+            </div>
+            <div>
+              <span>Workspace</span>
+              <strong>{activeFile || "No file selected"}</strong>
+            </div>
+          </div>
 
-          <select
-            className="lang-select"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="cpp">C++</option>
-            <option value="javascript">JavaScript</option>
-            <option value="python">Python</option>
-          </select>
+          <div className="topbar-actions">
+            <select
+              className="lang-select"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              aria-label="Select language"
+            >
+              <option value="cpp">C++</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+            </select>
+
+            <Button className="run-btn" onClick={runCode}>
+              <Play size={15} />
+              Run
+            </Button>
+          </div>
         </div>
 
-        {/* EDITOR */}
         <div className="editor-box">
           <Editor
             height="100%"
             language={language === "cpp" ? "cpp" : language}
             value={files[activeFile] || ""}
-            
             onChange={(value) => {
               const newCode = value || "";
 
-              // update local
               setFiles((prev) => ({
                 ...prev,
                 [activeFile]: newCode,
               }));
 
-              // send to others
               socket.emit("code-change", {
                 roomId,
                 file: activeFile,
                 code: newCode,
               });
             }}
-
             theme="vs-dark"
           />
         </div>
 
-        {/* INPUT OUTPUT */}
         <div className="io-container">
-
           <div className="input-box">
-            <h3>Input</h3>
+            <h3>
+              <Terminal size={15} />
+              Input
+            </h3>
             <textarea
+              placeholder="Optional stdin for your program"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
           </div>
 
           <div className="output-box">
-            <h3>Output</h3>
-            <pre>{output}</pre>
+            <h3>
+              <Terminal size={15} />
+              Output
+            </h3>
+            <pre>{output || "Run your code to see output here."}</pre>
           </div>
-
         </div>
-
       </div>
 
-      {/* RIGHT PANEL */}
       <div className="right-panel">
-        <Members
-          roomId={roomId}
-          username={username}
-          navigate={navigate}
-        />
+        <div className="panel-heading">
+          <UsersRound size={17} />
+          Collaboration
+        </div>
+
+        <Members roomId={roomId} username={username} navigate={navigate} />
 
         <div className="chat-wrapper">
           <ChatBox roomId={roomId} username={username} />
         </div>
       </div>
-
     </div>
   );
 }

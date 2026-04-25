@@ -10,6 +10,9 @@ build/
 .env.*
 !.env.example
 
+# Deployment metadata
+.vercel/
+
 # Logs
 logs/
 *.log
@@ -44,6 +47,7 @@ Desktop.ini
 
 # Temporary and generated binaries
 temp/
+temp-runs/
 tmp/
 *.tmp
 *.exe

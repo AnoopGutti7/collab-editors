@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { MessageSquareText, SendHorizonal } from "lucide-react";
 import { socket } from "../socket";
 import "./ChatBox.css";
 
@@ -7,14 +8,23 @@ export default function ChatBox({ roomId, username }) {
   const [messages, setMessages] = useState([]);
   const messagesRef = useRef(null);
 
-  // RECEIVE MESSAGE
   useEffect(() => {
-    socket.on("receive-message", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
+    const loadMessages = (data) => {
+      setMessages(Array.isArray(data) ? data : []);
+    };
 
-    return () => socket.off("receive-message");
-  }, []);
+    const receiveMessage = (data) => {
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socket.on("load-messages", loadMessages);
+    socket.on("receive-message", receiveMessage);
+
+    return () => {
+      socket.off("load-messages", loadMessages);
+      socket.off("receive-message", receiveMessage);
+    };
+  }, [roomId]);
 
   // AUTO SCROLL
   useEffect(() => {
@@ -28,7 +38,11 @@ export default function ChatBox({ roomId, username }) {
   const sendMessage = () => {
     if (!message.trim()) return;
 
-    const data = { roomId, username, message };
+    const data = {
+      roomId,
+      username,
+      message: message.trim(),
+    };
 
     socket.emit("send-message", data);
     setMessage("");
@@ -36,12 +50,14 @@ export default function ChatBox({ roomId, username }) {
 
   return (
     <div className="chat-container">
-
-      <div className="chat-title">Chat</div>
+      <div className="chat-title">
+        <MessageSquareText size={16} />
+        Chat
+      </div>
 
       <div className="chat-body" ref={messagesRef}>
         {messages.length === 0 ? (
-          <p className="empty">No messages yet</p>
+          <p className="empty">No messages yet.</p>
         ) : (
           messages.map((msg, index) => {
             const isMe = msg.username === username;
@@ -76,7 +92,9 @@ export default function ChatBox({ roomId, username }) {
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
 
-        <button onClick={sendMessage}>Send</button>
+        <button onClick={sendMessage} aria-label="Send message">
+          <SendHorizonal size={16} />
+        </button>
       </div>
 
     </div>
