@@ -1,0 +1,96 @@
+.editor-container {
+  display: flex;
+  height: 100vh;
+  background: #0d1117;
+  color: white;
+  overflow: hidden;
+}
+
+/* LEFT */
+.files-container {
+  width: 240px;
+  background: #161b22;
+  border-right: 1px solid #30363d;
+}
+
+/* CENTER */
+.center-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+.run-btn {
+  background: #238636;
+  border: none;
+  padding: 6px 12px;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.lang-select {
+  background: #0d1117;
+  color: white;
+  border: 1px solid #30363d;
+  padding: 5px;
+}
+
+/* EDITOR */
+.editor-box {
+  flex: 1;
+}
+
+/* IO */
+.io-container {
+  height: 200px;
+  display: flex;
+  background: #010409;
+  border-top: 1px solid #30363d;
+}
+
+.input-box,
+.output-box {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-box textarea {
+  flex: 1;
+  background: #0d1117;
+  color: white;
+  border: 1px solid #30363d;
+  padding: 8px;
+}
+
+.output-box pre {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* RIGHT */
+.right-panel {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  background: #161b22;
+  border-left: 1px solid #30363d;
+}
+
+.chat-wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
