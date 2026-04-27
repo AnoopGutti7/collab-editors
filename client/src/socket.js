@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
 
-export const socket = io("https://colabeditor-1.onrender.com", {
+const API_URL=import.meta.env.VITE_API_URL||"http://localhost:5000";
+export const socket = io(API_URL, {
   transports: ["polling", "websocket"],
 });
